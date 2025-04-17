@@ -35,49 +35,6 @@ struct MainTabView: View {
     }
 }
 
-// MARK: - Models
-struct UserGoal {
-    var dailyTarget: Int
-    var currentCount: Int
-
-    var progressPercentage: Double {
-        guard dailyTarget > 0 else { return 0 }
-        return min(Double(currentCount) / Double(dailyTarget), 1.0)
-    }
-
-    var isGoalReached: Bool {
-        return currentCount >= dailyTarget
-    }
-}
-
-
-
-// MARK: - Settings View
-
-
-// MARK: - Date Extensions
-extension Date {
-    var startOfDay: Date {
-        return Calendar.current.startOfDay(for: self)
-    }
-
-    func isInSameMonth(as date: Date) -> Bool {
-        let calendar = Calendar.current
-        return calendar.component(.month, from: self) == calendar.component(.month, from: date) &&
-               calendar.component(.year, from: self) == calendar.component(.year, from: date)
-    }
-
-    var isToday: Bool {
-        return Calendar.current.isDateInToday(self)
-    }
-
-    func isSameDay(as date: Date) -> Bool {
-        let calendar = Calendar.current
-        return calendar.isDate(self, inSameDayAs: date)
-    }
-}
-
-// MARK: - Preview
 #Preview {
     MainTabView()
 }

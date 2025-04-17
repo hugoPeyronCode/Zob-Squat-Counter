@@ -1,3 +1,11 @@
+//
+//  UserGoal.swift
+//  Zob Squat Counter
+//
+//  Created by Hugo Peyron on 17/04/2025.
+//
+
+
 import SwiftUI
 
 struct UserGoal {
