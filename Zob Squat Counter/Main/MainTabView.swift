@@ -15,7 +15,7 @@ struct MainTabView: View {
             HomeView()
                 .tag(0)
                 .tabItem {
-                    Label("Home", systemImage: "figure.walk")
+                    Label("Home", systemImage: "figure.cross.training")
                 }
 
             CalendarView()
