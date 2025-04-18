@@ -6,14 +6,21 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct HomeView: View {
   @AppStorage("dailyGoal") private var dailyGoal = 30
-  @State private var squatCount: Int = 0
+  @Environment(\.modelContext) private var modelContext
+
   @State private var isPlusMenuExpanded = false
   @State private var showGoalReachedAnimation = false
   @State private var goalAnimationScale = 0.7
   @State private var isControlExpanded = false
+  @State private var todaySquats: SquatDay?
+
+  private var squatCount: Int {
+    todaySquats?.count ?? 0
+  }
 
   private var goal: UserGoal {
     UserGoal(dailyTarget: dailyGoal, currentCount: squatCount)
@@ -30,6 +37,31 @@ struct HomeView: View {
       }
       .padding()
     }
+    .onAppear {
+      loadTodayData()
+    }
+  }
+
+  // MARK: - Data Loading
+
+  private func loadTodayData() {
+    todaySquats = SquatDataManager.fetchTodaySquats(context: modelContext)
+  }
+
+  private func updateSquatCount(_ newCount: Int) {
+    if todaySquats == nil {
+      todaySquats = SquatDataManager.fetchTodaySquats(context: modelContext)
+    }
+
+    let previousCount = todaySquats?.count ?? 0
+    todaySquats?.count = newCount
+
+    // Update statistics
+    SquatDataManager.updateStats(
+      context: modelContext,
+      withNewSquatCount: newCount,
+      previousCount: previousCount
+    )
   }
 
   private var dateDisplayView: some View {
@@ -160,12 +192,10 @@ struct HomeView: View {
 
   private func incrementCounter() {
     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-      squatCount += 1
-      
+      updateSquatCount(squatCount + 1)
+
       if squatCount == dailyGoal {
-        withAnimation {
-          showGoalReachedAnimation = true
-        }
+        showGoalReachedAnimation = true
       }
     }
   }
@@ -173,7 +203,7 @@ struct HomeView: View {
   private func decrementCounter() {
     guard squatCount > 0 else { return }
     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-      squatCount -= 1
+      updateSquatCount(squatCount - 1)
     }
   }
 }

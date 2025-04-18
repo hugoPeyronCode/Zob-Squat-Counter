@@ -6,17 +6,24 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct CalendarView: View {
   @AppStorage("dailyGoal") private var dailyGoal = 30
   @AppStorage("hasStatsSubscription") private var hasStatsSubscription = false
+  @Environment(\.modelContext) private var modelContext
+
   @State private var selectedDate = Date()
-  @State private var calendarData: [Date: Int] = [:]
   @State private var currentMonth = Date()
-  @State private var bestStreak = 35
-  @State private var currentStreak = 30
-  @State private var showSubscriptionSheet = false
   @State private var statsFadeOut = false
+  @State private var showSubscriptionSheet = false
+
+  // Stats loaded from SwiftData
+  @State private var calendarData: [Date: Int] = [:]
+  @State private var bestStreak = 0
+  @State private var currentStreak = 0
+  @State private var averageDailySquats = 0
+  @State private var totalSquats = 0
 
   var body: some View {
     VStack(alignment: .leading) {
@@ -65,12 +72,61 @@ struct CalendarView: View {
     }
     .fontDesign(.monospaced)
     .padding(.top)
-    .onAppear {
-      calendarData = generateSampleData()
+    .task {
+      await loadCalendarData()
+    }
+    .onChange(of: currentMonth) { _, _ in
+      Task {
+        await loadCalendarData()
+      }
     }
     .sheet(isPresented: $showSubscriptionSheet) {
       SubscriptionView(onSubscribe: handleSubscriptionPurchase)
     }
+  }
+
+  // MARK: - Data Loading
+
+  private func loadCalendarData() async {
+    // Get the date range for the current month view (including visible days from previous/next months)
+    let calendar = Calendar.current
+    guard let monthInterval = calendar.dateInterval(of: .month, for: currentMonth),
+          let monthFirstWeek = calendar.dateInterval(of: .weekOfMonth, for: monthInterval.start),
+          let monthLastWeek = calendar.dateInterval(of: .weekOfMonth, for: monthInterval.end - 1) else {
+      return
+    }
+
+    // Fetch squat days from SwiftData
+    let startDate = monthFirstWeek.start
+    let endDate = monthLastWeek.end
+
+    let squatDays = SquatDataManager.fetchSquatDays(
+      context: modelContext,
+      startDate: startDate,
+      endDate: endDate
+    )
+
+    // Convert to dictionary for easy lookup
+    var newCalendarData: [Date: Int] = [:]
+    for day in squatDays {
+      newCalendarData[day.dayStart] = day.count
+    }
+
+    // Update state with the fetched data
+    await MainActor.run {
+      self.calendarData = newCalendarData
+
+      // Load stats
+      loadStatsData()
+    }
+  }
+
+  private func loadStatsData() {
+    let stats = SquatDataManager.fetchOrCreateStats(context: modelContext)
+    self.bestStreak = stats.bestStreak
+    self.currentStreak = stats.currentStreak
+    self.totalSquats = stats.totalSquats
+    self.averageDailySquats = SquatDataManager.getAverageDailySquats(context: modelContext)
   }
 
   private var streakInfoView: some View {
@@ -78,10 +134,10 @@ struct CalendarView: View {
       Text("Stats")
         .font(.title3)
       VStack(alignment: .leading) {
-        statsElements(name: "Best streak", count: 45)
-        statsElements(name: "Current streak", count: 5)
-        statsElements(name: "Avg daily squats", count: 120)
-        statsElements(name: "Total squats", count: 15445)
+        statsElements(name: "Best streak", count: bestStreak)
+        statsElements(name: "Current streak", count: currentStreak)
+        statsElements(name: "Avg daily squats", count: averageDailySquats)
+        statsElements(name: "Total squats", count: totalSquats)
       }
     }
     .padding(.horizontal, 5)
@@ -143,18 +199,22 @@ struct CalendarView: View {
 
       ForEach(daysInMonth(), id: \.self) { date in
         if date.isInSameMonth(as: currentMonth) {
-          DayCell(date: date, squatCount: calendarData[date.startOfDay] ?? 0, goalTarget: dailyGoal)
-            .onTapGesture {
-              withAnimation {
-                selectedDate = date
-              }
+          DayCell(
+            date: date,
+            squatCount: calendarData[date.startOfDay] ?? 0,
+            goalTarget: dailyGoal
+          )
+          .onTapGesture {
+            withAnimation {
+              selectedDate = date
             }
-            .overlay {
-              if date.isSameDay(as: selectedDate) {
-                RoundedRectangle(cornerRadius: 10)
-                  .stroke(Color.primary, lineWidth: 2)
-              }
+          }
+          .overlay {
+            if date.isSameDay(as: selectedDate) {
+              RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.primary, lineWidth: 2)
             }
+          }
         } else {
           Text("")
             .frame(height: 50)
@@ -281,19 +341,6 @@ struct CalendarView: View {
       // Select today's date
       selectedDate = today
     }
-  }
-
-  private func generateSampleData() -> [Date: Int] {
-    let calendar = Calendar.current
-    var data: [Date: Int] = [:]
-
-    for day in -30...0 {
-      guard let date = calendar.date(byAdding: .day, value: day, to: Date()) else { continue }
-      let squatCount = Int.random(in: 0...(dailyGoal + 15))
-      data[date] = squatCount
-    }
-
-    return data
   }
 
   private func previousMonth() {

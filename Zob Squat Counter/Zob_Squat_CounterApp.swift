@@ -6,19 +6,28 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct ZobSquatCounterApp: App {
-    @AppStorage("isDarkMode") private var isDarkMode = false
+  @AppStorage("isDarkMode") private var isDarkMode = false
 
-    var body: some Scene {
-        WindowGroup {
-            MainTabView()
-                .preferredColorScheme(isDarkMode ? .dark : .light)
-        }
+  var sharedModelContainer: ModelContainer = {
+    do {
+      let schema = Schema([SquatDay.self, UserStats.self])
+      let modelConfiguration = ModelConfiguration(schema: schema)
+      return try ModelContainer(for: schema, configurations: [modelConfiguration])
+    } catch {
+      // In a real app, you would handle this error properly
+      fatalError("Could not create ModelContainer: \(error)")
     }
-}
+  }()
 
-#Preview(body: {
-  MainTabView()
-})
+  var body: some Scene {
+    WindowGroup {
+      MainTabView()
+        .preferredColorScheme(isDarkMode ? .dark : .light)
+        .modelContainer(sharedModelContainer)
+    }
+  }
+}

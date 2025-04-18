@@ -6,9 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @Environment(\.modelContext) private var modelContext
+
+    // Pre-initialize model context to ensure it's available
+    @Query private var squatDays: [SquatDay]
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -32,6 +37,19 @@ struct MainTabView: View {
         }
         .tint(.primary)
         .animation(.easeInOut, value: selectedTab)
+        .onAppear {
+            // Initialize data if needed (ensures SwiftData is working)
+            ensureDataIsInitialized()
+        }
+    }
+
+    private func ensureDataIsInitialized() {
+        // This ensures the SwiftData stack is properly initialized
+        // before any views try to access it
+        _ = SquatDataManager.fetchOrCreateStats(context: modelContext)
+
+        // Make sure today has an entry
+        _ = SquatDataManager.fetchTodaySquats(context: modelContext)
     }
 }
 
