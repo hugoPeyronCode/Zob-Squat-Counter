@@ -15,7 +15,7 @@ class WidgetDataProvider {
     static let shared = WidgetDataProvider()
 
     // MARK: - App Group Configuration
-    private let appGroupIdentifier = "group.com.cortex.ZobSquatCounter"
+    private let appGroupIdentifier = "group.com.cortex.squatCounter"
     private let sharedUserDefaults: UserDefaults
 
     // File paths for data storage
