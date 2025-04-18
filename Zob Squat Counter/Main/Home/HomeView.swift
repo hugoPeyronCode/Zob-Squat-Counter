@@ -7,9 +7,11 @@
 
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct HomeView: View {
   @AppStorage("dailyGoal") private var dailyGoal = 30
+  @AppStorage("isWidgetSubscriptionActive") private var isWidgetSubscriptionActive = false
   @Environment(\.modelContext) private var modelContext
 
   @State private var isPlusMenuExpanded = false
@@ -40,12 +42,18 @@ struct HomeView: View {
     .onAppear {
       loadTodayData()
     }
+    .onChange(of: dailyGoal) { _, _ in
+      // Update widget when goal changes
+      updateWidgetIfEnabled()
+    }
   }
 
   // MARK: - Data Loading
 
   private func loadTodayData() {
     todaySquats = SquatDataManager.fetchTodaySquats(context: modelContext)
+    // Update widget on initial load
+    updateWidgetIfEnabled()
   }
 
   private func updateSquatCount(_ newCount: Int) {
@@ -62,6 +70,19 @@ struct HomeView: View {
       withNewSquatCount: newCount,
       previousCount: previousCount
     )
+
+    // Update widgets
+    updateWidgetIfEnabled()
+  }
+
+  // MARK: - Widget Integration
+
+  // Direct function in the view where modelContext is accessible
+  private func updateWidgetIfEnabled() {
+    // Only update widgets if feature is enabled
+    if isWidgetSubscriptionActive {
+      SquatDataManager.updateWidgetData(context: modelContext)
+    }
   }
 
   private var dateDisplayView: some View {

@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import SwiftData
+import WidgetKit
 
 struct SettingsView: View {
   @State private var selectedMode = "circle.righthalf.filled"
@@ -15,8 +17,11 @@ struct SettingsView: View {
   @AppStorage("isSystemMode") private var isSystemMode = true
   @AppStorage("dailyGoal") private var dailyGoal = 30
   @AppStorage("themeName") private var themeName = "Classic"
-  @State private var isWidgetSubscriptionActive = false
-  @State private var isThemeSubscriptionActive = false
+  @AppStorage("isWidgetSubscriptionActive") private var isWidgetSubscriptionActive = false
+  @AppStorage("isThemeSubscriptionActive") private var isThemeSubscriptionActive = false
+
+  // Access to the model context
+  @Environment(\.modelContext) private var modelContext
 
   // Sample theme colors (would be more elaborate in a real app)
   private let themeOptions = ["Classic", "Ocean", "Forest", "Sunset", "Neon"]
@@ -29,9 +34,14 @@ struct SettingsView: View {
         }
 
         Section("Goal Settings") {
-
-
           Stepper("Daily Goal: \(dailyGoal) squats", value: $dailyGoal, in: 1...200)
+            .onChange(of: dailyGoal) { _, _ in
+              // Update widgets when goal changes
+              if isWidgetSubscriptionActive {
+                WidgetCenter.shared.reloadAllTimelines()
+                SquatDataManager.updateWidgetData(context: modelContext)
+              }
+            }
 
           HStack {
             Text("Quick Set")
@@ -41,6 +51,11 @@ struct SettingsView: View {
               Button("\(num)") {
                 withAnimation {
                   dailyGoal = num
+                  // Update widgets
+                  if isWidgetSubscriptionActive {
+                    WidgetCenter.shared.reloadAllTimelines()
+                    SquatDataManager.updateWidgetData(context: modelContext)
+                  }
                 }
               }
               .buttonStyle(.bordered)
@@ -52,15 +67,19 @@ struct SettingsView: View {
 
         Section("Premium Features") {
           VStack(alignment: .leading, spacing: 10) {
-
             Toggle("Home Screen Widget", isOn: $isWidgetSubscriptionActive)
               .tint(.primary)
+              .onChange(of: isWidgetSubscriptionActive) { _, newValue in
+                handleWidgetToggle(isEnabled: newValue)
+              }
 
             if !isWidgetSubscriptionActive {
               Label("Unlock with Premium", systemImage: "lock.fill")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.leading, 28)
+            } else {
+              widgetOptionsSection
             }
           }
 
@@ -121,6 +140,49 @@ struct SettingsView: View {
       }
     }
     .fontDesign(.monospaced)
+  }
+
+  // MARK: - Widget Settings
+
+  @ViewBuilder
+  private var widgetOptionsSection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Widget Options")
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .padding(.top, 4)
+
+      Button {
+        // Refresh widgets
+        WidgetCenter.shared.reloadAllTimelines()
+      } label: {
+        Label("Refresh Widgets", systemImage: "arrow.clockwise")
+          .font(.footnote)
+      }
+
+      Button {
+        // Open system widget configuration
+        if let url = URL(string: "widgetkit://configure") {
+          UIApplication.shared.open(url)
+        }
+      } label: {
+        Label("Configure Widgets", systemImage: "square.grid.2x2")
+          .font(.footnote)
+      }
+    }
+    .padding(.vertical, 4)
+    .padding(.leading, 28)
+  }
+
+  // Direct function in the view where modelContext is accessible
+  private func handleWidgetToggle(isEnabled: Bool) {
+    if isEnabled {
+      // Initialize widget data when feature enabled
+      SquatDataManager.updateWidgetData(context: modelContext)
+    }
+
+    // Always reload widget timelines when toggled
+    WidgetCenter.shared.reloadAllTimelines()
   }
 }
 

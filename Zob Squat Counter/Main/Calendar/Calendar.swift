@@ -234,6 +234,7 @@ struct CalendarView: View {
 
     return VStack(spacing: spacing / 2) {
       Text(selectedDate.formatted(date: .complete, time: .omitted))
+        .contentTransition(.numericText())
         .font(.headline)
         .padding(.bottom, 6)
 
