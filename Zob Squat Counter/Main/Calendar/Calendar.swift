@@ -9,14 +9,17 @@ import SwiftUI
 
 struct CalendarView: View {
   @AppStorage("dailyGoal") private var dailyGoal = 30
+  @AppStorage("hasStatsSubscription") private var hasStatsSubscription = false
   @State private var selectedDate = Date()
   @State private var calendarData: [Date: Int] = [:]
   @State private var currentMonth = Date()
   @State private var bestStreak = 35
   @State private var currentStreak = 30
+  @State private var showSubscriptionSheet = false
+  @State private var statsFadeOut = false
 
   var body: some View {
-    VStack {
+    VStack(alignment: .leading) {
       monthNavigationView
       calendarGridView
       calendarLegend
@@ -25,6 +28,38 @@ struct CalendarView: View {
       Spacer()
 
       streakInfoView
+        .overlay {
+          if !hasStatsSubscription {
+            ZStack {
+              // Blur overlay when not subscribed
+              RoundedRectangle(cornerRadius: 10)
+                .foregroundStyle(.ultraThinMaterial)
+                .opacity(statsFadeOut ? 0 : 0.8)
+
+              Button {
+                openSubscriptionShop()
+              } label: {
+                Image(systemName: "eye")
+                  .foregroundStyle(.indigo)
+                  .padding()
+                  .background(.thinMaterial)
+                  .clipShape(.circle)
+              }
+              .scaleEffect(statsFadeOut ? 0.5 : 1)
+              .opacity(statsFadeOut ? 0 : 1)
+            }
+            .animation(.spring(response: 0.3), value: statsFadeOut)
+          }
+        }
+
+      Button {
+        jumpToToday()
+      } label: {
+        Text("Today")
+          .foregroundStyle(.blue)
+          .padding(.top)
+      }
+      .padding(.horizontal, 5)
 
       Spacer()
     }
@@ -33,29 +68,43 @@ struct CalendarView: View {
     .onAppear {
       calendarData = generateSampleData()
     }
+    .sheet(isPresented: $showSubscriptionSheet) {
+      SubscriptionView(onSubscribe: handleSubscriptionPurchase)
+    }
   }
-
-  // MARK: - Component Views
 
   private var streakInfoView: some View {
     VStack(alignment: .leading) {
+      Text("Stats")
+        .font(.title3)
       VStack(alignment: .leading) {
-        Text("Best streak \(bestStreak)")
-        Text("Current streak \(currentStreak)")
-        Text("Total squats 15400")
-
-        Button {
-          jumpToToday()
-        } label: {
-          Text("Today")
-            .foregroundStyle(.blue)
-        }
+        statsElements(name: "Best streak", count: 45)
+        statsElements(name: "Current streak", count: 5)
+        statsElements(name: "Avg daily squats", count: 120)
+        statsElements(name: "Total squats", count: 15445)
       }
-      .font(.system(size: 17))
-      .fontDesign(.monospaced)
-      .bold()
-
     }
+    .padding(.horizontal, 5)
+  }
+
+  private func statsElements(name: String, count: Int) -> some View {
+    HStack {
+      Text("\(name)")
+      Spacer()
+      Text("\(count)")
+        .overlay {
+          if !hasStatsSubscription {
+            ZStack {
+              RoundedRectangle(cornerRadius: 5)
+                .foregroundStyle(.ultraThinMaterial)
+            }
+          }
+        }
+    }
+    .foregroundStyle(.gray)
+    .font(.system(size: 17))
+    .fontDesign(.monospaced)
+    .bold()
   }
 
   private var monthNavigationView: some View {
@@ -186,6 +235,37 @@ struct CalendarView: View {
     }
   }
 
+  // MARK: - Subscription Logic
+
+  private func openSubscriptionShop() {
+    // For demonstration/development, show a quick animation of the stats being revealed
+    // In a real app, you would present a proper subscription sheet
+    if !hasStatsSubscription {
+      showSubscriptionSheet = true
+    }
+  }
+
+  private func handleSubscriptionPurchase(subscriptionType: SubscriptionType) {
+    // Handle subscription purchase completion
+    switch subscriptionType {
+    case .monthly, .yearly:
+      // Animate the blur overlay disappearing
+      withAnimation {
+        statsFadeOut = true
+      }
+
+      // After animation completes, set the subscription state
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        hasStatsSubscription = true
+        statsFadeOut = false
+      }
+
+    case .none:
+      // User cancelled or didn't complete subscription
+      showSubscriptionSheet = false
+    }
+  }
+
   // MARK: - Helper Methods
 
   private func jumpToToday() {
@@ -253,6 +333,142 @@ struct CalendarView: View {
     return formatter
   }
 }
+
+// MARK: - Subscription View and Types
+
+enum SubscriptionType {
+  case monthly
+  case yearly
+  case none  // Used for cancellation
+}
+
+struct SubscriptionView: View {
+  @Environment(\.dismiss) private var dismiss
+  var onSubscribe: (SubscriptionType) -> Void
+  @State private var selectedOption: SubscriptionType = .monthly
+
+  var body: some View {
+    VStack(spacing: 20) {
+      Text("Unlock Stats")
+        .font(.title)
+        .fontWeight(.bold)
+
+      Text("Get detailed statistics and insights into your squat performance")
+        .multilineTextAlignment(.center)
+        .padding(.horizontal)
+
+      Spacer().frame(height: 20)
+
+      VStack(spacing: 15) {
+        subscriptionOption(
+          title: "Monthly",
+          price: "$1.99",
+          description: "Billed monthly",
+          type: .monthly
+        )
+
+        subscriptionOption(
+          title: "Yearly",
+          price: "$14.99",
+          description: "Save 37% - $1.25/month",
+          type: .yearly,
+          isBestValue: true
+        )
+      }
+      .padding()
+
+      Spacer()
+
+      Button {
+        onSubscribe(selectedOption)
+        dismiss()
+      } label: {
+        Text("Subscribe Now")
+          .fontWeight(.semibold)
+          .frame(maxWidth: .infinity)
+          .padding()
+          .background(Color.indigo)
+          .foregroundColor(.white)
+          .cornerRadius(14)
+      }
+      .padding(.horizontal)
+
+      Button {
+        onSubscribe(.none)
+        dismiss()
+      } label: {
+        Text("No Thanks")
+          .foregroundStyle(.secondary)
+      }
+      .padding(.bottom)
+    }
+    .padding()
+    .fontDesign(.monospaced)
+  }
+
+  private func subscriptionOption(
+    title: String,
+    price: String,
+    description: String,
+    type: SubscriptionType,
+    isBestValue: Bool = false
+  ) -> some View {
+    HStack {
+      VStack(alignment: .leading, spacing: 4) {
+        HStack {
+          Text(title)
+            .font(.headline)
+
+          if isBestValue {
+            Text("BEST VALUE")
+              .font(.system(size: 10))
+              .fontWeight(.bold)
+              .padding(.horizontal, 6)
+              .padding(.vertical, 2)
+              .background(Color.indigo)
+              .foregroundStyle(.white)
+              .cornerRadius(4)
+          }
+        }
+
+        Text(description)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
+      Spacer()
+
+      VStack(alignment: .trailing) {
+        Text(price)
+          .font(.headline)
+      }
+
+      Circle()
+        .strokeBorder(selectedOption == type ? Color.indigo : Color.gray, lineWidth: 2)
+        .frame(width: 24, height: 24)
+        .overlay {
+          if selectedOption == type {
+            Circle()
+              .fill(Color.indigo)
+              .frame(width: 16, height: 16)
+          }
+        }
+    }
+    .padding()
+    .background(
+      RoundedRectangle(cornerRadius: 12)
+        .stroke(selectedOption == type ? Color.indigo : Color.gray.opacity(0.3), lineWidth: 2)
+    )
+    .contentShape(Rectangle())
+    .onTapGesture {
+      withAnimation(.spring(response: 0.3)) {
+        selectedOption = type
+      }
+    }
+  }
+}
+
+// MARK: - Day Cell
 
 struct DayCell: View {
   let date: Date
