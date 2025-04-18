@@ -25,64 +25,251 @@ struct CalendarView: View {
   @State private var averageDailySquats = 0
   @State private var totalSquats = 0
 
+  // Layout properties
+  let spacing: CGFloat = 20
+  let cardPadding: CGFloat = 16
+
   var body: some View {
-    VStack(alignment: .leading) {
-      monthNavigationView
-      calendarGridView
-      calendarLegend
-      selectedDayDetailView
+    ScrollView {
+      VStack(alignment: .center, spacing: spacing) {
+        // Calendar header and grid
+        calendarSection
+          .background(
+            RoundedRectangle(cornerRadius: 16)
+              .fill(Color.primary.opacity(0.03))
+          )
+          .padding(.horizontal)
 
-      Spacer()
+        // Day detail card
+        selectedDayDetailView
+          .padding(.horizontal)
 
-      streakInfoView
-        .overlay {
-          if !hasStatsSubscription {
-            ZStack {
-              // Blur overlay when not subscribed
-              RoundedRectangle(cornerRadius: 10)
-                .foregroundStyle(.ultraThinMaterial)
-                .opacity(statsFadeOut ? 0 : 0.8)
+        // Stats section
+        statsSection
+          .padding(.horizontal)
 
-              Button {
-                openSubscriptionShop()
-              } label: {
-                Image(systemName: "eye")
-                  .foregroundStyle(.indigo)
-                  .padding()
-                  .background(.thinMaterial)
-                  .clipShape(.circle)
-              }
-              .scaleEffect(statsFadeOut ? 0.5 : 1)
-              .opacity(statsFadeOut ? 0 : 1)
-            }
-            .animation(.spring(response: 0.3), value: statsFadeOut)
-          }
-        }
-
-      Button {
-        jumpToToday()
-      } label: {
-        Text("Today")
-          .foregroundStyle(.blue)
-          .padding(.top)
+        todayButton
       }
-      .padding(.horizontal, 5)
-
-      Spacer()
-    }
-    .fontDesign(.monospaced)
-    .padding(.top)
-    .task {
-      await loadCalendarData()
-    }
-    .onChange(of: currentMonth) { _, _ in
-      Task {
+      .fontDesign(.monospaced)
+      .padding(.vertical, spacing)
+      .task {
         await loadCalendarData()
       }
+      .onChange(of: currentMonth) { _, _ in
+        Task {
+          await loadCalendarData()
+        }
+      }
+      .sheet(isPresented: $showSubscriptionSheet) {
+        SubscriptionView(onSubscribe: handleSubscriptionPurchase)
+      }
     }
-    .sheet(isPresented: $showSubscriptionSheet) {
-      SubscriptionView(onSubscribe: handleSubscriptionPurchase)
+  }
+
+  // MARK: - UI Sections
+
+  private var todayButton: some View {
+    Button {
+      jumpToToday()
+    } label: {
+      Text("Today")
+        .fontWeight(.medium)
+        .foregroundStyle(.primary)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 24)
+        .background(.thinMaterial)
+        .clipShape(Capsule())
     }
+    .padding(.vertical, spacing)
+  }
+
+  private var calendarSection: some View {
+    VStack(spacing: spacing) {
+      monthNavigationView
+        .padding(.top, cardPadding)
+
+      // Make calendar scrollable horizontally if needed
+      ScrollView(.horizontal, showsIndicators: false) {
+        calendarGridView
+          .padding(.horizontal, cardPadding)
+      }
+
+      calendarLegend
+        .padding(.bottom, cardPadding)
+    }
+  }
+
+  private var statsSection: some View {
+    VStack(alignment: .leading, spacing: spacing / 2) {
+      Text("Statistics")
+        .font(.title3)
+        .fontWeight(.bold)
+        .padding(.bottom, 4)
+
+      VStack(alignment: .leading, spacing: spacing / 2) {
+        statsElements(name: "Best streak", count: bestStreak)
+        statsElements(name: "Current streak", count: currentStreak)
+        statsElements(name: "Avg daily squats", count: averageDailySquats)
+        statsElements(name: "Total squats", count: totalSquats)
+      }
+    }
+    .padding(cardPadding)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(
+      RoundedRectangle(cornerRadius: 16)
+        .fill(Color.primary.opacity(0.03))
+    )
+    .statsBlurContainer(
+      isVisible: hasStatsSubscription,
+      isFadingOut: statsFadeOut,
+      onUnlockTapped: openSubscriptionShop
+    )
+    .clipShape(RoundedRectangle(cornerRadius: 16))
+  }
+
+  // MARK: - Calendar Elements
+
+  private var monthNavigationView: some View {
+    HStack {
+      Button(action: previousMonth) {
+        Image(systemName: "chevron.left")
+          .font(.title3)
+          .foregroundStyle(.gray)
+          .padding(8)
+          .background(Circle().fill(Color.primary.opacity(0.05)))
+      }
+
+      Spacer()
+
+      Text(monthYearFormatter.string(from: currentMonth))
+        .font(.title2)
+        .fontWeight(.semibold)
+        .animation(.none, value: currentMonth)
+
+      Spacer()
+
+      Button(action: nextMonth) {
+        Image(systemName: "chevron.right")
+          .font(.title3)
+          .foregroundStyle(.gray)
+          .padding(8)
+          .background(Circle().fill(Color.primary.opacity(0.05)))
+      }
+    }
+    .padding(.horizontal)
+  }
+
+  private var calendarGridView: some View {
+    LazyVGrid(columns: Array(repeating: GridItem(.fixed(40)), count: 7), spacing: 10) {
+      // Weekday headers
+      ForEach(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"], id: \.self) { day in
+        Text(day)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .frame(width: 40, height: 20)
+      }
+
+      // Calendar days
+      ForEach(daysInMonth(), id: \.self) { date in
+        if date.isInSameMonth(as: currentMonth) {
+          DayCell(
+            date: date,
+            squatCount: calendarData[date.startOfDay] ?? 0,
+            goalTarget: dailyGoal
+          )
+          .onTapGesture {
+            withAnimation {
+              selectedDate = date
+            }
+          }
+          .overlay {
+            if date.isSameDay(as: selectedDate) {
+              RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.primary, lineWidth: 2)
+            }
+          }
+        } else {
+          Text("")
+            .frame(width: 40, height: 50)
+        }
+      }
+    }
+    .frame(minWidth: 300)
+  }
+
+  private var calendarLegend: some View {
+    HStack(spacing: 16) {
+      legendItem(color: .green, text: "Goal reached")
+      Spacer()
+      legendItem(color: .primary.opacity(0.3), text: "In progress")
+      Spacer()
+      legendItem(backgroundOpacity: 0.1, text: "Today")
+    }
+    .font(.caption2)
+    .foregroundStyle(.secondary)
+    .padding(.horizontal, 24)
+  }
+
+  private func legendItem(color: Color, text: String) -> some View {
+    HStack(spacing: 6) {
+      Circle()
+        .fill(color)
+        .frame(width: 8, height: 8)
+      Text(text)
+    }
+  }
+
+  private func legendItem(backgroundOpacity: Double, text: String) -> some View {
+    HStack(spacing: 6) {
+      RoundedRectangle(cornerRadius: 2)
+        .fill(Color.primary.opacity(backgroundOpacity))
+        .frame(width: 8, height: 8)
+      Text(text)
+    }
+  }
+
+  private var selectedDayDetailView: some View {
+    // Get the squat count, defaulting to 0 if there's no data
+    let squatCount = calendarData[selectedDate.startOfDay] ?? 0
+
+    return VStack(spacing: spacing / 2) {
+      Text(selectedDate.formatted(date: .complete, time: .omitted))
+        .font(.headline)
+        .padding(.bottom, 6)
+
+      HStack(spacing: 30) {
+        VStack {
+          Text("\(squatCount)")
+            .font(.system(size: 32, weight: .bold))
+            .contentTransition(.numericText())
+          Text("Squats")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+
+        Divider()
+          .frame(height: 50)
+
+        VStack {
+          Text("\(Int(min(Double(squatCount) / Double(dailyGoal) * 100, 100)))%")
+            .font(.system(size: 32, weight: .bold))
+            .foregroundStyle(squatCount >= dailyGoal ? .green : .primary)
+            .contentTransition(.numericText())
+          Text("of Goal")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+      }
+    }
+    .padding(cardPadding)
+    .background(
+      RoundedRectangle(cornerRadius: 16)
+        .fill(.ultraThinMaterial)
+    )
+    .transition(.move(edge: .bottom).combined(with: .opacity))
+    .animation(.spring, value: selectedDate)
   }
 
   // MARK: - Data Loading
@@ -129,19 +316,7 @@ struct CalendarView: View {
     self.averageDailySquats = SquatDataManager.getAverageDailySquats(context: modelContext)
   }
 
-  private var streakInfoView: some View {
-    VStack(alignment: .leading) {
-      Text("Stats")
-        .font(.title3)
-      VStack(alignment: .leading) {
-        statsElements(name: "Best streak", count: bestStreak)
-        statsElements(name: "Current streak", count: currentStreak)
-        statsElements(name: "Avg daily squats", count: averageDailySquats)
-        statsElements(name: "Total squats", count: totalSquats)
-      }
-    }
-    .padding(.horizontal, 5)
-  }
+  // MARK: - Helper Views
 
   private func statsElements(name: String, count: Int) -> some View {
     HStack {
@@ -163,143 +338,9 @@ struct CalendarView: View {
     .bold()
   }
 
-  private var monthNavigationView: some View {
-    HStack {
-      Button(action: previousMonth) {
-        Image(systemName: "chevron.left")
-          .font(.title3)
-          .foregroundStyle(.gray)
-      }
-
-      Spacer()
-
-      Text(monthYearFormatter.string(from: currentMonth))
-        .font(.title2)
-        .fontWeight(.semibold)
-        .animation(.none, value: currentMonth)
-
-      Spacer()
-
-      Button(action: nextMonth) {
-        Image(systemName: "chevron.right")
-          .font(.title3)
-          .foregroundStyle(.gray)
-      }
-    }
-    .padding(.horizontal)
-  }
-
-  private var calendarGridView: some View {
-    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 10) {
-      ForEach(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"], id: \.self) { day in
-        Text(day)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-      }
-
-      ForEach(daysInMonth(), id: \.self) { date in
-        if date.isInSameMonth(as: currentMonth) {
-          DayCell(
-            date: date,
-            squatCount: calendarData[date.startOfDay] ?? 0,
-            goalTarget: dailyGoal
-          )
-          .onTapGesture {
-            withAnimation {
-              selectedDate = date
-            }
-          }
-          .overlay {
-            if date.isSameDay(as: selectedDate) {
-              RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.primary, lineWidth: 2)
-            }
-          }
-        } else {
-          Text("")
-            .frame(height: 50)
-        }
-      }
-    }
-    .padding(.horizontal, 5)
-  }
-
-  private var calendarLegend: some View {
-    HStack(spacing: 16) {
-      legendItem(color: .green, text: "Goal reached")
-      legendItem(color: .primary, text: "In progress")
-      legendItem(backgroundOpacity: 0.1, text: "Today")
-    }
-    .font(.caption2)
-    .foregroundStyle(.secondary)
-    .padding(.top, 8)
-    .padding(.horizontal)
-    .frame(maxWidth: .infinity, alignment: .leading)
-  }
-
-  private func legendItem(color: Color, text: String) -> some View {
-    HStack(spacing: 4) {
-      Circle()
-        .fill(color)
-        .frame(width: 8, height: 8)
-      Text(text)
-    }
-  }
-
-  private func legendItem(backgroundOpacity: Double, text: String) -> some View {
-    HStack(spacing: 4) {
-      RoundedRectangle(cornerRadius: 2)
-        .fill(Color.primary.opacity(backgroundOpacity))
-        .frame(width: 8, height: 8)
-      Text(text)
-    }
-  }
-
-  @ViewBuilder
-  private var selectedDayDetailView: some View {
-    if let squatCount = calendarData[selectedDate.startOfDay] {
-      VStack(spacing: 15) {
-        Text(selectedDate.formatted(date: .complete, time: .omitted))
-          .font(.headline)
-
-        HStack(spacing: 20) {
-          VStack {
-            Text("\(squatCount)")
-              .font(.system(size: 36, weight: .bold))
-            Text("Squats")
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
-          }
-
-          Divider()
-            .frame(height: 40)
-
-          VStack {
-            Text("\(Int(min(Double(squatCount) / Double(dailyGoal) * 100, 100)))%")
-              .font(.system(size: 36, weight: .bold))
-              .foregroundStyle(squatCount >= dailyGoal ? .green : .primary)
-            Text("of Goal")
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
-          }
-        }
-        .padding()
-        .background(
-          RoundedRectangle(cornerRadius: 15)
-            .fill(.ultraThinMaterial)
-        )
-      }
-      .padding()
-      .transition(.move(edge: .bottom).combined(with: .opacity))
-      .animation(.spring, value: selectedDate)
-    }
-  }
-
   // MARK: - Subscription Logic
 
   private func openSubscriptionShop() {
-    // For demonstration/development, show a quick animation of the stats being revealed
-    // In a real app, you would present a proper subscription sheet
     if !hasStatsSubscription {
       showSubscriptionSheet = true
     }
@@ -310,12 +351,12 @@ struct CalendarView: View {
     switch subscriptionType {
     case .monthly, .yearly:
       // Animate the blur overlay disappearing
-      withAnimation {
+      withAnimation(.spring(response: 0.4)) {
         statsFadeOut = true
       }
 
       // After animation completes, set the subscription state
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
         hasStatsSubscription = true
         statsFadeOut = false
       }
@@ -572,4 +613,5 @@ extension Date {
 
 #Preview {
   CalendarView()
+    .previewWithData()
 }

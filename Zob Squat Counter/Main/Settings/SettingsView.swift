@@ -10,33 +10,33 @@ import SwiftUI
 struct SettingsView: View {
   @State private var selectedMode = "circle.righthalf.filled"
   @State private var lightModes = ["sun.max.fill", "circle.righthalf.filled", "moon.fill"]
-  
+
   @AppStorage("isDarkMode") private var isDarkMode = false
   @AppStorage("isSystemMode") private var isSystemMode = true
   @AppStorage("dailyGoal") private var dailyGoal = 30
   @AppStorage("themeName") private var themeName = "Classic"
   @State private var isWidgetSubscriptionActive = false
   @State private var isThemeSubscriptionActive = false
-  
+
   // Sample theme colors (would be more elaborate in a real app)
   private let themeOptions = ["Classic", "Ocean", "Forest", "Sunset", "Neon"]
-  
+
   var body: some View {
     NavigationView {
       Form {
         Section("Appearance") {
           DarkLightMode
         }
-        
+
         Section("Goal Settings") {
-          
-          
+
+
           Stepper("Daily Goal: \(dailyGoal) squats", value: $dailyGoal, in: 1...200)
-          
+
           HStack {
             Text("Quick Set")
             Spacer()
-            
+
             ForEach([10, 30, 50, 100], id: \.self) { num in
               Button("\(num)") {
                 withAnimation {
@@ -49,13 +49,13 @@ struct SettingsView: View {
             }
           }
         }
-        
+
         Section("Premium Features") {
           VStack(alignment: .leading, spacing: 10) {
-            
+
             Toggle("Home Screen Widget", isOn: $isWidgetSubscriptionActive)
               .tint(.primary)
-            
+
             if !isWidgetSubscriptionActive {
               Label("Unlock with Premium", systemImage: "lock.fill")
                 .font(.caption)
@@ -63,11 +63,11 @@ struct SettingsView: View {
                 .padding(.leading, 28)
             }
           }
-          
+
           VStack(alignment: .leading, spacing: 10) {
             Toggle("Custom Themes", isOn: $isThemeSubscriptionActive)
               .tint(.primary)
-            
+
             if !isThemeSubscriptionActive {
               Label("Unlock with Premium", systemImage: "lock.fill")
                 .font(.caption)
@@ -76,7 +76,7 @@ struct SettingsView: View {
             }
           }
         }
-        
+
         if isThemeSubscriptionActive {
           Section("Theme Selection") {
             Picker("Theme", selection: $themeName) {
@@ -87,16 +87,16 @@ struct SettingsView: View {
             .pickerStyle(.navigationLink)
           }
         }
-        
+
         Section {
           NavigationLink(destination: Text("About this app").padding()) {
             Label("About", systemImage: "info.circle")
           }
-          
+
           NavigationLink(destination: Text("Privacy Policy would go here").padding()) {
             Label("Privacy Policy", systemImage: "hand.raised")
           }
-          
+
           Button(action: {
             // Would show upgrade screen
           }) {
@@ -130,7 +130,7 @@ extension SettingsView {
       Image(systemName: selectedMode)
         .font(.system(size: 18))
         .frame(width: 24)
-      
+
       Text(returnIconForDarkLightMode())
         .bold()
       Spacer()
@@ -147,7 +147,7 @@ extension SettingsView {
       }
     }
   }
-  
+
   func returnIconForDarkLightMode(mode: String? = nil) -> String {
     let modeToCheck = mode ?? selectedMode
     switch modeToCheck {
@@ -161,7 +161,7 @@ extension SettingsView {
       return "System"
     }
   }
-  
+
   func updateAppearanceMode(mode: String) {
     switch mode {
     case "moon.fill":
@@ -180,4 +180,5 @@ extension SettingsView {
 
 #Preview {
   SettingsView()
+    .previewWithData()
 }

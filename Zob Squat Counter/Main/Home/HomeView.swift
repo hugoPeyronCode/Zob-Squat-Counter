@@ -208,6 +208,7 @@ struct HomeView: View {
   }
 }
 
-#Preview {
-  HomeView()
+#Preview("Home") {
+    HomeView()
+        .previewWithData()
 }
