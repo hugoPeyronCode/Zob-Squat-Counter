@@ -49,8 +49,22 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				SquatEntry.swift,
+				SquatTimelineProvider.swift,
+				SquatWidget.swift,
+				SquatWidgetView.swift,
 			);
 			target = 505E12D72DB285FB00015AB0 /* SquatWidgetExtensionExtension */;
+		};
+		505E12FD2DB290B500015AB0 /* Exceptions for "SquatWidgetExtension" folder in "Zob Squat Counter" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SquatEntry.swift,
+				SquatTimelineProvider.swift,
+				SquatWidget.swift,
+				SquatWidgetView.swift,
+			);
+			target = 505E111C2DB17FAF00015AB0 /* Zob Squat Counter */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -63,6 +77,7 @@
 		505E12DE2DB285FB00015AB0 /* SquatWidgetExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				505E12FD2DB290B500015AB0 /* Exceptions for "SquatWidgetExtension" folder in "Zob Squat Counter" target */,
 				505E12EF2DB285FD00015AB0 /* Exceptions for "SquatWidgetExtension" folder in "SquatWidgetExtensionExtension" target */,
 			);
 			path = SquatWidgetExtension;

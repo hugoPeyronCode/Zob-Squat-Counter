@@ -11,8 +11,6 @@ import SwiftUI
 @main
 struct SquatWidgetExtensionBundle: WidgetBundle {
     var body: some Widget {
-        SquatWidgetExtension()
-        SquatWidgetExtensionControl()
-        SquatWidgetExtensionLiveActivity()
+        SquatWidget()
     }
 }
