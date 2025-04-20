@@ -8,44 +8,6 @@
 import WidgetKit
 import SwiftUI
 
-// Model structures for widget data
-struct DailySquatData: Hashable, Codable {
-    let date: Date
-    let count: Int
-    let goal: Int
-
-    var percentage: Double {
-        guard goal > 0 else { return 0 }
-        return min(Double(count) / Double(goal), 1.0)
-    }
-
-    var goalReached: Bool {
-        return count >= goal
-    }
-
-    var dayName: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E"
-        return formatter.string(from: date)
-    }
-
-    var dayNumber: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d"
-        return formatter.string(from: date)
-    }
-
-    var isToday: Bool {
-        return Calendar.current.isDateInToday(date)
-    }
-}
-
-struct SquatStats: Hashable, Codable {
-    let bestStreak: Int
-    let currentStreak: Int
-    let totalSquats: Int
-}
-
 // Widget entry with all required data
 struct SquatEntry: TimelineEntry {
     let date: Date

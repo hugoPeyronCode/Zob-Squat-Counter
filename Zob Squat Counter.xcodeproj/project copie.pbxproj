@@ -45,6 +45,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		502298C92DB53495006B9F3B /* Exceptions for "Zob Squat Counter" folder in "Zob Squat Counter" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SharedModels.swift,
+			);
+			target = 505E111C2DB17FAF00015AB0 /* Zob Squat Counter */;
+		};
 		505E12EF2DB285FD00015AB0 /* Exceptions for "SquatWidgetExtension" folder in "SquatWidgetExtensionExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -68,6 +75,7 @@
 		505E111F2DB17FAF00015AB0 /* Zob Squat Counter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				502298C92DB53495006B9F3B /* Exceptions for "Zob Squat Counter" folder in "Zob Squat Counter" target */,
 				505E13062DB294F400015AB0 /* Exceptions for "Zob Squat Counter" folder in "SquatWidgetExtensionExtension" target */,
 			);
 			path = "Zob Squat Counter";

@@ -15,6 +15,7 @@ struct SquatWidget: Widget {
         StaticConfiguration(kind: kind, provider: SquatTimelineProvider()) { entry in
             SquatWidgetView(entry: entry)
                 .fontDesign(.monospaced)
+                .containerBackground(.fill.tertiary, for: .widget) // Add this line
         }
         .configurationDisplayName("Squat Counter")
         .description("Track your daily squats progress.")
@@ -30,16 +31,19 @@ struct SquatWidget_Previews: PreviewProvider {
             SquatWidgetView(entry: SquatEntry.sampleEntry(widgetFamily: .systemSmall))
                 .previewContext(WidgetPreviewContext(family: .systemSmall))
                 .fontDesign(.monospaced)
+                .containerBackground(.fill.tertiary, for: .widget) // Add this line
 
             // Medium widget preview
             SquatWidgetView(entry: SquatEntry.sampleEntry(widgetFamily: .systemMedium))
                 .previewContext(WidgetPreviewContext(family: .systemMedium))
                 .fontDesign(.monospaced)
+                .containerBackground(.fill.tertiary, for: .widget) // Add this line
 
             // Large widget preview
             SquatWidgetView(entry: SquatEntry.sampleEntry(widgetFamily: .systemLarge))
                 .previewContext(WidgetPreviewContext(family: .systemLarge))
                 .fontDesign(.monospaced)
+                .containerBackground(.fill.tertiary, for: .widget) // Add this line
         }
     }
 }

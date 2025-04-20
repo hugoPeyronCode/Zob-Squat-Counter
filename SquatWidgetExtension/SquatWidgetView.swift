@@ -31,64 +31,60 @@ struct SmallSquatWidget: View {
   var entry: SquatEntry
 
   var body: some View {
-    VStack {
-      // Header with date
-      Text(entry.dateString)
-        .font(.caption2)
-        .foregroundStyle(.secondary)
-        .padding(.top, 2)
+    GeometryReader { geometry in
+      VStack(spacing: 4) {
+        // Header with date
+        Text(entry.dateString)
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .padding(.top, 4)
 
-      Spacer()
+        Spacer()
 
-      // Progress circle
-      ZStack {
-        // Background circle
-        Circle()
-          .stroke(
-            Color.gray.opacity(0.2),
-            lineWidth: 4
-          )
-
-        // Progress arc
-        Circle()
-          .trim(from: 0, to: CGFloat(entry.progressPercentage))
-          .stroke(
-            entry.goalReached ? Color.green : Color.primary,
-            style: StrokeStyle(
-              lineWidth: 4,
-              lineCap: .round
+        // Progress circle
+        ZStack {
+          // Background circle
+          Circle()
+            .stroke(
+              Color.gray.opacity(0.2),
+              lineWidth: 3
             )
-          )
-          .rotationEffect(.degrees(-90))
 
-        // Counter text
-        VStack(spacing: 0) {
-          Text("\(entry.todaySquats)")
-            .font(.system(size: 34, weight: .bold))
+          // Progress arc
+          Circle()
+            .trim(from: 0, to: CGFloat(entry.progressPercentage))
+            .stroke(
+              entry.goalReached ? Color.green : Color.primary,
+              style: StrokeStyle(
+                lineWidth: 3,
+                lineCap: .round
+              )
+            )
+            .rotationEffect(.degrees(-90))
 
-          Text("of \(entry.dailyGoal)")
-            .font(.system(size: 12))
-            .foregroundStyle(.secondary)
+          // Counter text
+          VStack(spacing: 0) {
+            Text("\(entry.todaySquats)")
+              .font(.system(size: min(geometry.size.width * 0.25, 34), weight: .bold))
+              .minimumScaleFactor(0.5)
+
+            Text("of \(entry.dailyGoal)")
+              .font(.system(size: min(geometry.size.width * 0.08, 12)))
+              .foregroundStyle(.secondary)
+          }
         }
+        .frame(
+          width: min(geometry.size.width - 30, geometry.size.height - 60),
+          height: min(geometry.size.width - 30, geometry.size.height - 60)
+        )
+        .padding(.vertical, 4)
+
+        Spacer()
+
       }
-      .padding(15)
-
-      Spacer()
-
-      // Streak indicator if available
-      if entry.stats.currentStreak > 0 {
-        HStack {
-          Image(systemName: "flame.fill")
-            .foregroundStyle(.orange)
-
-          Text("\(entry.stats.currentStreak)")
-            .font(.caption)
-            .bold()
-        }
-        .padding(.bottom, 6)
-      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .padding(8)
     }
-    .padding(8)
     .widgetURL(URL(string: "zobbsquat://home"))
   }
 }

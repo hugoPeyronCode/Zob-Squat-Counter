@@ -10,7 +10,8 @@ import SwiftUI
 
 @main
 struct SquatWidgetExtensionBundle: WidgetBundle {
-    var body: some Widget {
-        SquatWidget()
-    }
+  var body: some Widget {
+    SquatWidget()
+    SquatWidgetExtension()
+  }
 }
