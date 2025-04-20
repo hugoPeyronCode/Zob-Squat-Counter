@@ -49,35 +49,32 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				SquatEntry.swift,
-				SquatTimelineProvider.swift,
-				SquatWidget.swift,
-				SquatWidgetView.swift,
 			);
 			target = 505E12D72DB285FB00015AB0 /* SquatWidgetExtensionExtension */;
 		};
-		505E12FD2DB290B500015AB0 /* Exceptions for "SquatWidgetExtension" folder in "Zob Squat Counter" target */ = {
+		505E13062DB294F400015AB0 /* Exceptions for "Zob Squat Counter" folder in "SquatWidgetExtensionExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				SquatEntry.swift,
-				SquatTimelineProvider.swift,
-				SquatWidget.swift,
-				SquatWidgetView.swift,
+				Models/SquatDay.swift,
+				Widgets/MainAppWidgetIntegration.swift,
+				Widgets/WidgetDataProvider.swift,
 			);
-			target = 505E111C2DB17FAF00015AB0 /* Zob Squat Counter */;
+			target = 505E12D72DB285FB00015AB0 /* SquatWidgetExtensionExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		505E111F2DB17FAF00015AB0 /* Zob Squat Counter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				505E13062DB294F400015AB0 /* Exceptions for "Zob Squat Counter" folder in "SquatWidgetExtensionExtension" target */,
+			);
 			path = "Zob Squat Counter";
 			sourceTree = "<group>";
 		};
 		505E12DE2DB285FB00015AB0 /* SquatWidgetExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				505E12FD2DB290B500015AB0 /* Exceptions for "SquatWidgetExtension" folder in "Zob Squat Counter" target */,
 				505E12EF2DB285FD00015AB0 /* Exceptions for "SquatWidgetExtension" folder in "SquatWidgetExtensionExtension" target */,
 			);
 			path = SquatWidgetExtension;
@@ -451,7 +448,7 @@
 				CODE_SIGN_ENTITLEMENTS = SquatWidgetExtensionExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "Zob\\ Squat\\ Counter/Widgets/SquatWidget.swift Zob\\ Squat\\ Counter/Widgets/SquatEntry.swift Zob\\ Squat\\ Counter/Widgets/SquatTimelineProvider.swift Zob\\ Squat\\ Counter/Widgets/MainAppWidgetIntegration.swift Zob\\ Squat\\ Counter/Widgets/SquatWidgetView.swift Zob\\ Squat\\ Counter/Widgets/WidgetDataProvider.swift";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = YA24P24868;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SquatWidgetExtension/Info.plist;
@@ -480,7 +477,7 @@
 				CODE_SIGN_ENTITLEMENTS = SquatWidgetExtensionExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "Zob\\ Squat\\ Counter/Widgets/SquatWidget.swift Zob\\ Squat\\ Counter/Widgets/SquatEntry.swift Zob\\ Squat\\ Counter/Widgets/SquatTimelineProvider.swift Zob\\ Squat\\ Counter/Widgets/MainAppWidgetIntegration.swift Zob\\ Squat\\ Counter/Widgets/SquatWidgetView.swift Zob\\ Squat\\ Counter/Widgets/WidgetDataProvider.swift";
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = YA24P24868;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SquatWidgetExtension/Info.plist;
