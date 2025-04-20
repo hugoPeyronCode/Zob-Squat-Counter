@@ -359,6 +359,9 @@ struct LargeSquatWidget: View {
   }
 }
 
+
+
+
 #Preview("Small Widget") {
   SmallSquatWidget(entry: SquatEntry.sampleEntry(widgetFamily: .systemSmall))
     .previewContext(WidgetPreviewContext(family: .systemSmall))
