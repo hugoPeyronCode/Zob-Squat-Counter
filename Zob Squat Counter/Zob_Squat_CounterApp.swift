@@ -25,9 +25,10 @@ struct ZobSquatCounterApp: App {
 
   var body: some Scene {
     WindowGroup {
-      MainTabView()
-        .preferredColorScheme(isDarkMode ? .dark : .light)
-        .modelContainer(sharedModelContainer)
+      SquatDetectionView()
+//      MainTabView()
+//        .preferredColorScheme(isDarkMode ? .dark : .light)
+//        .modelContainer(sharedModelContainer)
     }
   }
 }

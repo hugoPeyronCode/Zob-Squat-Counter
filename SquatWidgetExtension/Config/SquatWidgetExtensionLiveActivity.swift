@@ -3,7 +3,7 @@
 //  SquatWidgetExtension
 //
 //  Created by Hugo Peyron on 18/04/2025.
-//
+
 
 import ActivityKit
 import WidgetKit
