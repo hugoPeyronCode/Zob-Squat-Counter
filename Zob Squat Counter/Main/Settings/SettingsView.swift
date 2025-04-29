@@ -18,7 +18,6 @@ struct SettingsView: View {
   @AppStorage("dailyGoal") private var dailyGoal = 30
   @AppStorage("themeName") private var themeName = "Classic"
   @AppStorage("isWidgetSubscriptionActive") private var isWidgetSubscriptionActive = false
-  @AppStorage("isThemeSubscriptionActive") private var isThemeSubscriptionActive = false
 
   // Access to the model context
   @Environment(\.modelContext) private var modelContext
@@ -65,7 +64,7 @@ struct SettingsView: View {
           }
         }
 
-        Section("Premium Features") {
+        Section("Premium") {
           VStack(alignment: .leading, spacing: 10) {
             Toggle("Home Screen Widget", isOn: $isWidgetSubscriptionActive)
               .tint(.primary)
@@ -81,29 +80,6 @@ struct SettingsView: View {
             } else {
               widgetOptionsSection
             }
-          }
-
-          VStack(alignment: .leading, spacing: 10) {
-            Toggle("Custom Themes", isOn: $isThemeSubscriptionActive)
-              .tint(.primary)
-
-            if !isThemeSubscriptionActive {
-              Label("Unlock with Premium", systemImage: "lock.fill")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.leading, 28)
-            }
-          }
-        }
-
-        if isThemeSubscriptionActive {
-          Section("Theme Selection") {
-            Picker("Theme", selection: $themeName) {
-              ForEach(themeOptions, id: \.self) { theme in
-                Text(theme)
-              }
-            }
-            .pickerStyle(.navigationLink)
           }
         }
 
@@ -128,7 +104,6 @@ struct SettingsView: View {
       .navigationTitle("Settings")
       .navigationBarTitleDisplayMode(.inline)
       .animation(.easeInOut(duration: 0.2), value: isWidgetSubscriptionActive)
-      .animation(.easeInOut(duration: 0.2), value: isThemeSubscriptionActive)
       .preferredColorScheme(isSystemMode ? nil : (isDarkMode ? .dark : .light))
       .onAppear {
         // Initialize the selected mode based on current settings
